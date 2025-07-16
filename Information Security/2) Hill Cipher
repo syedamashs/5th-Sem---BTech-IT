@@ -1,0 +1,147 @@
+import java.util.*;
+
+public class HillCipherSimple {
+
+    static final String lower = "abcdefghijklmnopqrstuvwxyz";
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Menu\n1)Encryption\n2)Decryption\n3)Exit\n");
+        int n=sc.nextInt();
+    while(n!=3){
+        if(n==1)encryption(sc);
+        else if(n==2) decryption(sc);
+        else if(n==3) return;
+        else System.out.print("INVALID INPUT!!");
+        n = sc.nextInt();
+    }  
+    }
+    
+    
+    
+    public static void encryption(Scanner sc){
+        
+        System.out.println("Enter 4 values for 2x2 Key Matrix (row-wise):");
+        int[][] key = new int[2][2];
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                key[i][j] = sc.nextInt();
+
+        sc.nextLine(); // consume newline
+
+        // Input: Plaintext
+        System.out.print("Enter the plain text: ");
+        String plain = sc.nextLine().toLowerCase();
+
+        // Step 1: Remove spaces and make sure length is even
+        plain = plain.replaceAll("\\s+", "");
+        if (plain.length() % 2 != 0) plain += 'x'; // Padding with 'x'
+
+        // Step 2: Encrypt in pairs
+        StringBuilder cipher = new StringBuilder();
+        for (int i = 0; i < plain.length(); i += 2) {
+            char p1 = plain.charAt(i);
+            char p2 = plain.charAt(i + 1);
+
+            int n1 = lower.indexOf(p1);
+            int n2 = lower.indexOf(p2);
+
+            // Matrix multiplication: C = K * P mod 26
+            int c1 = (key[0][0] * n1 + key[0][1] * n2) % 26;
+            int c2 = (key[1][0] * n1 + key[1][1] * n2) % 26;
+
+            cipher.append(lower.charAt(c1)).append(lower.charAt(c2));
+        }
+
+        // Output
+        System.out.println("Encrypted Cipher Text: " + cipher.toString());
+        
+    }
+    
+    public static int modInverse(int a,int m){
+        a = a%m;
+        for(int x=1;x<m;x++){
+            if((a*x)%m==1) return x;
+        }
+        return -1;
+    }
+    
+    public static int[][] inverseKey(int[][] key){
+        int a = key[0][0],b=key[0][1],c=key[1][0],d=key[1][1];
+        int det = (a*d - b*c) %26;
+        if(det<0) det+=26;
+        
+        int detInv = modInverse(det,26);
+        if(detInv == -1) throw new RuntimeException("Matrix is not invertible");
+        
+        int[][] adj ={
+            {d,-b},
+            {-c,a}
+        };
+        
+        int[][] inv = new int[2][2];
+        for(int i=0;i<2;i++){
+            for(int j=0;j<2;j++){
+                int val = adj[i][j] * detInv;
+                val = val%26;
+                if(val<0) val+=26;
+                inv[i][j] = val;
+            }
+        }
+        
+        return inv;
+    }
+    
+    
+    public static void decryption(Scanner sc){
+        
+        System.out.println("Enter 4 values for 2x2 Key Matrix (row-wise):");
+        int[][] key = new int[2][2];
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                key[i][j] = sc.nextInt();
+
+        sc.nextLine(); // consume newline
+
+        // Input: Plaintext
+        System.out.print("Enter the cipher text: ");
+        String cipher = sc.nextLine().toLowerCase();
+
+        // Step 1: Remove spaces and make sure length is even
+        cipher = cipher.replaceAll("\\s+", ""); 
+        
+        int[][] invkey = inverseKey(key);
+
+        // Step 2: Encrypt in pairs
+        StringBuilder plain = new StringBuilder();
+        for (int i = 0; i < cipher.length(); i += 2) {
+            char p1 = cipher.charAt(i);
+            char p2 = cipher.charAt(i + 1);
+
+            int n1 = lower.indexOf(p1);
+            int n2 = lower.indexOf(p2);
+
+            // Matrix multiplication: C = K * P mod 26
+            int c1 = (invkey[0][0] * n1 + invkey[0][1] * n2) % 26;
+            int c2 = (invkey[1][0] * n1 + invkey[1][1] * n2) % 26;
+
+            plain.append(lower.charAt(c1)).append(lower.charAt(c2));
+        }
+
+        // Output
+        System.out.println("Decrypted Plain Text: " + plain.toString());
+        
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
